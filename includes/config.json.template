@@ -1,0 +1,51 @@
+This file serves as a base template for your config file.
+Copy and paste this into your bot's base directory, then fill in
+the values with your custom configuration.
+
+Keep this file safe and inaccessible; it contains sensitive information!
+Do not commit your config file to your repository if you choose to fork this bot!
+
+{
+    "adminID": "", # The ID of the bot's admin. This account will have full access to all of the bot's functions.
+    "updateAvatar": "", # The URL of a new avatar. You CANNOT set the avatar via the developer portal. It will not sync (this is by design). Only set this when you're ready to update, and don't forget to remove it after.
+    "guildID": "", # The bot will not be able to work via DMs if this is not set.
+    "prefix":  "!", # The prefix for all commands. If a message does not start with this, the bot will ignore it (with a few exceptions).
+    "token": "",  # Always keep your token a secret! Do not commit this to a public repository!
+    "database": "", # The name of your database for moderation features.
+    "dbhost": "", # Probably localhost, unless you have a remote database.
+    "dbuser": "", # Do NOT use root! Create a user for the bot to use!
+    "dbpass": "", # This will work with a blank password, but you are STRONGLY encouraged to create a unique password.
+    "archiveID": "", # This is the category ID of your #Archives category
+    "logChannel": "", # This is the channel ID your bot uses for general logs
+    "reportChannel": "", # When your bot receives a report, it will place it in this channel ID.
+    "modID": "", # The role ID of your moderator group. This group will be allowed to use the moderation tools.
+    "muteID": "", # This is the role ID of your "muted" group.
+    "noInvites": , # Set this to true if you don't want to allow discord invite links in your server.
+    "mentionLimit": false, # If you want to limit the number of mentions a user can make in a single message, set this to a number.
+    "ignores": { # A list of commands for ?ignore, along with what role ID should be assigned. Requires you to manually configure the role permissions.
+        "command": "roleID" # `(prefix)ignore command` will add roleID to the user.
+    },
+    "messageColors": { # Customize these to your liking!'
+        "startup": "",
+        "memJoin": "#4e782b",
+        "memLeave": "#c2595a",
+        "memWarn": "#7c7c7c",
+        "memMute": "#ecd6ad",
+        "memUnmute": "#2ec46e",
+        "memKick": "#f60202",
+        "memBan": "#7b0202",
+        "memUnban": "#027b02",
+        "memLogs": "",
+        "commandHelp": "",
+        "warnClear": "",
+        "messageEdit": "#618fe1",
+        "messageDelete": "#f69f02",
+        "chanStash": "",
+        "chanPop": "",
+        "misuseWarn": "",
+        "error": "",
+        "confirm": "",
+        "ignore": ""
+    }
+
+}
