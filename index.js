@@ -211,7 +211,7 @@ async function unmute(mute, guild, logChan) {
             mutedID: mute.dataValues.mutedID
         }
     });
-    if (!Object.keys(checkMute).length)
+    if (!checkMute.length)
         return; // Probably unmuted manually; ignore.
     const member = await guild.members.fetch(mute.dataValues.mutedID);
     await member.roles.remove(config.muteID, member.user.username + "'s mute has expired.");
