@@ -192,10 +192,10 @@ async function queueUnmutes(mutes, logChan) {
     const guild = await client.guilds.fetch(config.guildID);
     let fields = [];
     mutes.forEach(mute => {
-        const duration = (parseInt(mute.dataValues.unmuteSeconds, 10) - parseInt(mute.dataValues.nowSeconds, 10)) * 1000;
+        const duration = (parseInt(mute.getDataValue("unmuteSeconds"), 10) - parseInt(mute.dataValues.nowSeconds, 10)) * 1000;
         setTimeout(unmute, duration, mute, guild, logChan);
         fields.push({
-            name: mute.dataValues.mutedName,
+            name: mute.getDataValue("mutedName"),
             value: "Muted for " + mute.dataValues.duration + " at " + mute.dataValues.mutedTime + ".\n"
                 + "Unmute scheduled at " + mute.dataValues.unmutedTime + ".",
             inline: true
@@ -208,10 +208,10 @@ async function queueUnmutes(mutes, logChan) {
 async function unmute(mute, guild, logChan) {
     const checkMute = await Mutes.findOne({
         where: {
-            mutedID: mute.dataValues.mutedID
+            mutedID: mute.getDataValue("mutedID")
         }
     });
-    if (!checkMute.length)
+    if (!checkMute)
         return; // Probably unmuted manually; ignore.
     const member = await guild.members.fetch(mute.dataValues.mutedID);
     await member.roles.remove(config.muteID, member.user.username + "'s mute has expired.");
@@ -222,7 +222,7 @@ async function unmute(mute, guild, logChan) {
             }
         }).catch(err => console.log(err));
     }).catch(err => console.log(err));
-    logChan.send(ListenerResponses.muteExpireLog(member, mute.dataValues.duration));
+    logChan.send(ListenerResponses.muteExpireLog(member, mute.getDataValue("duration")));
     member.user.send(ListenerResponses.muteExpireUser(guild)).catch(err => {
         console.log(err);
         logChan.send(ListenerResponses.cannotMessageUser(member.user)).catch(err => console.log(err));
