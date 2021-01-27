@@ -19,7 +19,7 @@ const BanResponses = {
     memberNotFound(user, message) {
         return new Discord.MessageEmbed()
             .setColor(config.messageColors.error)
-            .setTitle("User is Not in Server")
+            .setTitle("Warning: User is Not in Server")
             .setDescription("User " + user.tag + " exists but is not a member of this server.")
             .addField("Command:", message.content)
             .setTimestamp();
@@ -43,11 +43,11 @@ const BanResponses = {
             .setTimestamp();
     },
 
-    banFailed(member){
+    banFailed(user){
         return new Discord.MessageEmbed()
             .setColor(config.messageColors.error)
             .setTitle("Ban Failed")
-            .setDescription("I was unable to ban user ID " + member.id + " (" + member.user.tag + "). Are my permissions set incorrectly?")
+            .setDescription("I was unable to ban user ID " + user.id + " (" + user.tag + "). Are my permissions set incorrectly?")
             .setTimestamp();
     },
 

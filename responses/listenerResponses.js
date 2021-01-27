@@ -205,6 +205,17 @@ const ListenerResponses = {
     },
 
 
+    filterActions(filterID, message, actions) {
+        const response = new Discord.MessageEmbed()
+            .setColor(config.messageColors.filter)
+            .setTitle("Filter #" + filterID + " Tripped")
+            .setDescription("User " + message.author.tag + " triggered filter #" + filterID)
+            .addField("Message:", message.content);
+        if (actions.length){
+            response.addField("The following actions have been taken:", actions.join("\n"));
+        }
+        return response;
+    }
 }
 
 module.exports = ListenerResponses;

@@ -30,10 +30,10 @@ module.exports = {
             return message.channel.send(BanResponses.syntaxError("No reason provided.", message));
         const member = await message.guild.members.fetch(user).catch(err => console.log(err));
         if (!member)
-            return message.channel.send(BanResponses.memberNotFound(user, message));
-        if (member.roles.highest.position >= modGroup.position)
+            message.channel.send(BanResponses.memberNotFound(user, message));
+        else if (member.roles.highest.position >= modGroup.position)
             return logChan.send(BanResponses.privilegedUser(message.author, user));
-        return member.ban({'reason': reason}).then(() => {
+        return message.guild.members.ban(user, {'reason': reason}).then(() => {
             message.channel.send(BanResponses.banSuccess(user));
             logChan.send(BanResponses.banSuccessLog(user, reason, message));
             user.send(BanResponses.notifyUser(reason, message)).catch(err => {
@@ -42,7 +42,7 @@ module.exports = {
             });
             sequelize.transaction(() => {
                 return ModLogs.create({
-                    loggedID: member.id,
+                    loggedID: user.id,
                     loggerID: message.author.id,
                     logName: "ban",
                     message: reason
@@ -53,7 +53,7 @@ module.exports = {
             });
         }).catch(err => {
             console.log(err);
-            return message.channel.send(BanResponses.banFailed(member));
+            return message.channel.send(BanResponses.banFailed(user));
         });
 
     }

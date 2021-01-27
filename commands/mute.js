@@ -25,7 +25,7 @@ module.exports = {
         if (message.author.id !== config.adminID && message.member.roles.highest.position < modGroup.position)
             return logChan.send(MuteResponses.unauthorizedUser(message, "mute " + args[0] + "."));
         const userDuration = args.shift(); // This is needed for human readable output later
-        let duration = getDuration(userDuration);
+        let duration = this.getDuration(userDuration);
         if (!duration)
             return message.channel.send(MuteResponses.syntaxError("Your format for the duration is not correct. You can specify days (d), hours (h), minutes(m), or seconds (s).", message));
         const interval = duration[1];
@@ -49,25 +49,26 @@ module.exports = {
 
         const member = await message.guild.members.fetch(user).catch(err => console.log(err));
         if (!member)
-            return message.channel.send(MuteResponses.memberNotFound(user, message));
-        if (member.roles.highest.position >= modGroup.position)
+            message.channel.send(MuteResponses.memberNotFound(user, message));
+        else if (member.roles.highest.position >= modGroup.position)
             return logChan.send(MuteResponses.privilegedUser(message.author, user));
-        await member.roles.add(config.muteID, reason).catch(err => {
-            console.log(err);
-            return message.channel.send(MuteResponses.muteFailed(user));
-        });
-        setTimeout(unmute, duration, user.tag, userID, duration, userDuration, message, logChan);
+        if (member)
+            await member.roles.add(config.muteID, reason).catch(err => {
+                console.log(err);
+                return message.channel.send(MuteResponses.muteFailed(user));
+            });
+        setTimeout(this.unmute, duration, user, duration, userDuration, message, logChan);
         return sequelize.transaction(() => {
             return ModLogs.create({
-                loggedID: member.id,
+                loggedID: user.id,
                 loggerID: message.author.id,
                 logName: "mute:" + userDuration,
                 message: reason
             })
                 .then(() => {
                     return Mutes.create({
-                        mutedID: member.id,
-                        mutedName: member.user.tag,
+                        mutedID: user.id,
+                        mutedName: user.tag,
                         duration: userDuration,
                         unmutedTime: Sequelize.literal("DATE_ADD(NOW()," + interval + ")")
                     }).catch(err => console.log(err));
@@ -78,80 +79,82 @@ module.exports = {
             .then(() => {
                 console.log("Transaction success.");
                 // Transaction was successfully committed. Everything is A-OK.
-                message.channel.send(MuteResponses.muteSuccess(member, member.user.tag, userDuration));
-                member.user.send(MuteResponses.notifyUser(reason, userDuration, message));
+                message.channel.send(MuteResponses.muteSuccess(user, userDuration));
+                user.send(MuteResponses.notifyUser(reason, userDuration, message));
             })
             .catch(err => {
                 console.log(err);
-                message.channel.send(MuteResponses.databaseWriteFailure(member));
-                member.user.send(MuteResponses.notifyUser(reason, userDuration, message)).catch(err => {
+                message.channel.send(MuteResponses.databaseWriteFailure(user));
+                user.send(MuteResponses.notifyUser(reason, userDuration, message)).catch(err => {
                     console.log(err);
                     logChan.send(MuteResponses.cannotMessageUser(user));
                 });
             });
+        },
+    /**
+     * Process user input to create proper time measurements
+     * @param arg
+     * @returns {boolean|(number|string)[]}
+     */
+    getDuration(arg) {
+        const measure = arg.trim().toLowerCase().slice(-1);
+        const time = parseInt(arg, 10);
+        let duration = 1;
+        let interval = "INTERVAL " + time.toString();
+        switch (measure) {
+            case ("d"):
+                interval += " DAY";
+                duration = time * 24 * 60 * 60; // d*h*m*s
+                break;
+            case ("h"):
+                interval += " HOUR";
+                duration = time * 60 * 60;  // h*m*s
+                break;
+            case ("m"):
+                interval += " MINUTE";
+                duration = time * 60; // m*s
+                break;
+            case ("s"): // Do nothing
+                interval += " SECOND";
+                duration = time;
+                break;
+            default:
+                return false; // Don't recognize the format
+        }
+        return [duration * 1000, interval];
+    },
 
+    async unmute(user, duration, userDuration, message, logChan) {
+        const mute = await Mutes.findOne({
+            where: {
+                mutedID: user.user.id
+            }
+        });
+        if (!mute)
+            return; // Probably unmuted manually; ignore.
+        const name = mute.getDataValue("mutedName");
+        await sequelize.transaction(() => {
+            return Mutes.destroy({
+                where: {
+                    mutedID: user.id
+                }
+            }).catch(err => console.log(err));
+        }).catch(err => console.log(err));
+        const member = await message.guild.members.fetch(user).catch(err => console.log(err));
+        if (!member) {
+            logChan.send(MuteResponses.userNotInServer(user.id, name));
+            return user.send(MuteResponses.muteExpireUser(message.guild)).catch(err => {
+                console.log(err);
+                return logChan.send(MuteResponses.cannotMessageUser(user));
+            });
+        }
+        if (member)
+            await member.roles.remove(config.muteID, user.username + "'s mute has expired.");
+        logChan.send(MuteResponses.muteExpireLog(member, userDuration));
+        user.send(MuteResponses.muteExpireUser(message.guild)).catch(err => {
+            console.log(err);
+            logChan.send(MuteResponses.cannotMessageUser(user));
+        });
 
     }
 };
-
-function getDuration(arg){
-    const measure = arg.trim().toLowerCase().slice(-1);
-    const time = parseInt(arg, 10);
-    let duration = 1;
-    let interval = "INTERVAL " + time.toString();
-    switch (measure){
-        case ("d"):
-            interval += " DAY";
-            duration = time * 24 * 60 * 60; // d*h*m*s
-            break;
-        case ("h"):
-            interval += " HOUR";
-            duration = time * 60 * 60;  // h*m*s
-            break;
-        case ("m"):
-            interval += " MINUTE";
-            duration = time * 60; // m*s
-            break;
-        case ("s"): // Do nothing
-            interval += " SECOND";
-            duration = time;
-            break;
-        default:
-            return false; // Don't recognize the format
-    }
-    return [duration * 1000, interval];
-}
-
-async function unmute(userName, id, duration, userDuration, message, logChan) {
-    const mute = await Mutes.findOne({
-        where: {
-            mutedID: id
-        }
-    });
-    if (!mute)
-        return; // Probably unmuted manually; ignore.
-    const name = mute.getDataValue("mutedName");
-    await sequelize.transaction(() => {
-        return Mutes.destroy({
-            where: {
-                mutedID: id
-            }
-        }).catch(err => console.log(err));
-    }).catch(err => console.log(err));
-    const member = await message.guild.members.fetch(id).catch(err => console.log(err));
-    if (!member) {
-        logChan.send(MuteResponses.userNotInServer(id, name));
-        const user = await message.client.users.fetch(id);
-        return user.send(MuteResponses.muteExpireUser(message.guild)).catch(err => {
-            console.log(err);
-            return logChan.send(MuteResponses.cannotMessageUser(user));
-        });
-    }
-    await member.roles.remove(config.muteID, userName + "'s mute has expired.");
-    logChan.send(MuteResponses.muteExpireLog(member, userDuration));
-    member.user.send(MuteResponses.muteExpireUser(message.guild)).catch(err => {
-        console.log(err);
-        logChan.send(MuteResponses.cannotMessageUser(member.user));
-    });
-
-}

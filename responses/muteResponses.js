@@ -32,16 +32,16 @@ const MuteResponses = {
         return new Discord.MessageEmbed()
             .setColor(config.messageColors.error)
             .setTitle("User Already Muted")
-            .setDescription("User " + user.id + " (" + user.tag + ") is already muted for " + mute.dataValues.duration + "."
-                + "\nMute expires: " + mute.dataValues.unmutedTime)
+            .setDescription("User " + user.id + " (" + user.tag + ") is already muted for " + mute.getDataValue("duration") + "."
+                + "\nMute expires: " + mute.getDataValue("unmutedTime"))
             .setTimestamp();
     },
 
-    muteSuccess(id, userName, duration) {
+    muteSuccess(user, duration) {
         return new Discord.MessageEmbed()
             .setColor(config.messageColors.memMute)
-            .setTitle('Successfully Muted ' + userName)
-            .setDescription("<@!" + id + "> (" + userName + ") muted successfully for " + duration + ".")
+            .setTitle('Successfully Muted ' + user.tag)
+            .setDescription("<@!" + user.id + "> (" + user.tag + ") muted successfully for " + duration + ".")
             .setTimestamp();
     },
 
@@ -66,7 +66,7 @@ const MuteResponses = {
     memberNotFound(user, message) {
         return new Discord.MessageEmbed()
             .setColor(config.messageColors.error)
-            .setTitle("User is Not in Server")
+            .setTitle("Warning: User is Not in Server")
             .setDescription("User " + user.tag + " exists but is not a member of this server.")
             .addField("Command:", message.content)
             .setTimestamp();
