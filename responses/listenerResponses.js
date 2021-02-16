@@ -78,7 +78,7 @@ const ListenerResponses = {
             .setColor(config.messageColors.messageDelete)
             .setTitle("Messaged Deleted")
             .setDescription("Messaged by " + user.tag + " (" + user.id + ") automatically deleted because it contained"
-                + "a Discord invite link.")
+                + " a Discord invite link.")
             .addField("Message:", message.content)
             .setFooter("ID: " + user.id)
             .setTimestamp();
