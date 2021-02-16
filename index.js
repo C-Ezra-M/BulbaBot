@@ -63,17 +63,6 @@ client.once('ready', async () => {
 
 // Listen for commands
 client.on('message', async message => {
-    const anHourAgo = Date.now() - (1000*60*60);
-    const text = message.content.toLowerCase();
-    const blacklist = [
-        ".net",
-        ".com",
-        ".info",
-        ".co.uk"
-    ];
-    // Temp fix for spam.
-    if (message.member.joinedAt > anHourAgo && (text.includes("axieinfinity") || text.includes("uniswap") || text.includes("airdrop") || text.includes("http") || blacklist.includes(text) ))
-        return message.delete();
     const guild = await message.client.guilds.fetch(config.guildID);
     const logChan = guild.channels.resolve(config.logChannel);
     if (config.mentionLimit && message.mentions.members?.size >= config.mentionLimit) {
@@ -164,7 +153,7 @@ client.on("messageDelete", message => {
     const logChan = guild.channels.resolve(config.logChannel);
     if (message.content.toLowerCase().includes("https://discord.gg") || message.mentions.members?.size >= 7)
         return; // This is already handled by the message listener.
-    if (!message.content && message.embeds) {
+    if (!message.content && message.embeds.length) {
         return logChan.send(ListenerResponses.embedMessageDeleted(message));
     }
     logChan.send(ListenerResponses.messageDeleted(message));
@@ -195,15 +184,7 @@ function checkRemoved(member) {
 }
 
 async function checkMutes(logChan) {
-    const mutes = await Mutes.findAll({
-        attributes: {
-            include: [
-                [Sequelize.fn('TIME_TO_SEC', Sequelize.literal("NOW()")), 'nowSeconds'],
-                [Sequelize.fn('TIME_TO_SEC', Sequelize.col("unmutedTime")), 'unmuteSeconds']
-            ]
-        }
-    });
-    console.log(mutes);
+    const mutes = await Mutes.findAll();
     if (!mutes.length) return false; // If no mutes are found, mutes will be an empty array
     else return queueUnmutes(mutes, logChan);
 }
@@ -212,7 +193,12 @@ async function queueUnmutes(mutes, logChan) {
     const guild = await client.guilds.fetch(config.guildID);
     let fields = [];
     mutes.forEach(mute => {
-        const duration = (parseInt(mute.getDataValue("unmuteSeconds"), 10) - parseInt(mute.getDataValue("nowSeconds"), 10)) * 1000;
+        // We need to get the remaining mute time in MS. To do this, we have to convert
+        // the MySQL timestamps to javascript dates.
+        let timeToUnmute = mute.getDataValue("unmutedTime").split(/[- :]/);
+        timeToUnmute = new Date(Date.UTC(timeToUnmute[0], timeToUnmute[1]-1, timeToUnmute[2], timeToUnmute[3], timeToUnmute[4], timeToUnmute[5]));
+        const now = new Date();
+        const duration = timeToUnmute.getTime() - now.getTime();
         setTimeout(unmute, duration, mute, guild, logChan);
         fields.push({
             name: mute.getDataValue("mutedName"),
