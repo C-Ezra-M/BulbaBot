@@ -193,12 +193,9 @@ async function queueUnmutes(mutes, logChan) {
     const guild = await client.guilds.fetch(config.guildID);
     let fields = [];
     mutes.forEach(mute => {
-        // We need to get the remaining mute time in MS. To do this, we have to convert
-        // the MySQL timestamps to javascript dates.
-        let timeToUnmute = mute.getDataValue("unmutedTime").split(/[- :]/);
-        timeToUnmute = new Date(Date.UTC(timeToUnmute[0], timeToUnmute[1]-1, timeToUnmute[2], timeToUnmute[3], timeToUnmute[4], timeToUnmute[5]));
-        const now = new Date();
-        const duration = timeToUnmute.getTime() - now.getTime();
+        const timeToUnmute = new Date(mute.getDataValue("unmutedTime")).getTime();
+        const now = new Date().getTime();
+        const duration = timeToUnmute - now;
         setTimeout(unmute, duration, mute, guild, logChan);
         fields.push({
             name: mute.getDataValue("mutedName"),
@@ -237,6 +234,8 @@ async function unmute(mute, guild, logChan) {
 }
 
 async function filterMessage(message) {
+    if (!message.member)
+        return;
     const filters = await Blacklist.findAll();
     if (!filters) return false; // No filters in place
     filters.forEach(filter => {
