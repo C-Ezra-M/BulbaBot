@@ -1,6 +1,6 @@
-#BulbaBot, A Customizable Bot Designed for BulbaGarden
+# BulbaBot, A Customizable Bot Designed for BulbaGarden
 
-##Overview
+## Overview
 BulbaBot was designed to fill the role of BulbaGarden's moderation bot for its public Discord server.
 It is capable of performing moderation tasks such as kicking and banning users, as well as adding roles for personal
 preferences or moderation. It logs all moderation actions taken, so that you no longer
@@ -8,7 +8,7 @@ need to rely on the Discord audit logs to review privileged actions.
 
 The bot is built on the Discord.js framework, which runs on Node.js.
 
-##Installation
+## Installation
 Installing BulbaBot is not terribly complicated, but it does require that you create your own bot app in the Discord
 developer portal. This process is fairly simple and well documented, and you can create your app at
 https://discord.com/developers/applications.
@@ -28,7 +28,7 @@ Once you've created your configuration file, you'll need to install nodeJS and t
 You can find node at https://nodejs.org. Once you install it, you'll need to navigate to the bot's install directory
 and run `npm install`. That should automatically install all the necessary dependencies.
 
-##Running the Bot
+## Running the Bot
 To start the bot, you'll need to run it with node. You can do this from the command line by navigating to the bot's
 install directory and running `node index.js`, although this will only keep the bot going until your current CLI
 session is terminated. Alternatives include using `screen` to run the bot in its own, detached session (not recommended)
@@ -36,7 +36,7 @@ or using systemd to register the bot as a service (highly recommended). This bot
 machines, thus there are no effective solutions currently in place for running it in said environments.
 Since this bot is in its early stages of development, you can help by providing solutions for Windows environments.
 
-##Moderation Notes
+## Moderation Notes
 The bot currently has several main moderation functions. This section will break down their functionality and explain
 their purpose and related configuration settings.
 
@@ -57,7 +57,7 @@ is not present, or remove it if it is.
 * Stash and pop are used to archive and unarchive channels, respectively. To use this functionality, you will need to
 create a category to put the archived channels in.
 
-##Logs
+## Logs
 Currently, the bot only produces logs to the console. If you utilize the systemd approach, this works perfectly
 because the logs will be written to the journal, making them viewable with `journalctl -u (botname).service`.
 Currently, I would like to add in the ability to log to a file, although this will require adding quite a bit of code.
